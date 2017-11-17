@@ -19,6 +19,7 @@
     "browserify": "^13.1.0",
     "chalk": "^1.1.1",
     "diff": "^2.2.3",
+    "eslint": "^4.11.0",
     "indent-string": "^2.1.0",
     "tap-xunit": "^1.7.0",
     "tape": "^4.8.0",
