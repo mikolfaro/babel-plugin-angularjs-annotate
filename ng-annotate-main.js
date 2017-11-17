@@ -73,12 +73,13 @@ function matchDirectiveReturnObject(path) {
     // only matches inside directives
     // return { .. controller: function($scope, $timeout), ...}
     
-    var returnPath, returnStatementArgument;
+    var returnPath;
     if (t.isReturnStatement(node) && node.argument) {
       if (t.isObjectExpression(node.argument)) {
         returnPath = matchProp("controller", (path.get && path.get("argument.properties") || node.argument.properties));
-      } else if (t.isIdentifier(path.get && (returnStatementArgument = path.get("argument")))) {
-        var bound = followReference(returnStatementArgument);
+      } else if (t.isIdentifier(path.get && path.get("argument"))) {
+        var binding = path.scope.getBinding(node.argument.name);
+        var bound = binding && binding.path;
         if (bound && t.isVariableDeclarator(bound)) {
           var init = bound.get("init");
           if (init && t.isObjectExpression(init)) {
