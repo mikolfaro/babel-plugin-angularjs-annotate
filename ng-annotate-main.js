@@ -73,16 +73,14 @@ function matchDirectiveReturnObject(path) {
     // only matches inside directives
     // return { .. controller: function($scope, $timeout), ...}
     
-    var returnPath;
+    var returnPath, returnStatementArgument;
     if (t.isReturnStatement(node) && node.argument) {
       if (t.isObjectExpression(node.argument)) {
         returnPath = matchProp("controller", (path.get && path.get("argument.properties") || node.argument.properties));
-      } else if (t.isIdentifier(path.get && path.get("argument"))) {
-        var binding = path.scope.getBinding(node.argument.name);
-        // Don't allow more than one reference to the directiveDefinition object
-        // because those could mutate the object with new "controller" value.
-        if (binding && t.isVariableDeclarator(binding.path) && binding.references === 1) {
-          var init = binding.path.get("init");
+      } else if (t.isIdentifier(path.get && (returnStatementArgument = path.get("argument")))) {
+        var bound = followReference(returnStatementArgument);
+        if (bound && t.isVariableDeclarator(bound)) {
+          var init = bound.get("init");
           if (init && t.isObjectExpression(init)) {
             returnPath = matchProp("controller", init.get("properties"));
           }
