@@ -72,7 +72,7 @@ function matchDirectiveReturnObject(path) {
 
     // only matches inside directives
     // return { .. controller: function($scope, $timeout), ...}
-    
+
     var returnPath;
     if (t.isReturnStatement(node) && node.argument) {
       if (t.isObjectExpression(node.argument)) {
@@ -377,9 +377,9 @@ function matchRegular(path, ctx) {
     const obj = callee.object; // identifier or expression
     const method = callee.property; // identifier
 
-    // short-cut implicit config special case:
+    // short-cut implicit config special cases:
     // angular.module("MyMod", function(a) {})
-    if (obj.name === "angular" && method.name === "module") {
+    if (objIsAngular(obj) && method.name === "module") {
         const args = path.get("arguments");
         if (args.length >= 2) {
             node.$chained = chainedRegular;
@@ -393,7 +393,7 @@ function matchRegular(path, ctx) {
         return false;
     }
 
-    const matchAngularModule = (obj.$chained === chainedRegular || isReDef(obj,ctx) || isLongDef(obj)) &&
+    const matchAngularModule = (obj.$chained === chainedRegular || isReDef(obj,ctx) || isLongDef(obj) || isRequireAngularDef(obj)) &&
         is.someof(method.name, ["provider", "value", "constant", "bootstrap", "config", "factory", "directive", "filter", "run", "controller", "service", "animation", "invoke", "store", "decorator", "component"]);
     if (!matchAngularModule) {
         return false;
@@ -427,6 +427,14 @@ function matchRegular(path, ctx) {
     return target;
 }
 
+function objIsAngular(obj) {
+  return obj.name === "angular" ||
+    (
+      obj.arguments && obj.arguments.length === 1 &&
+      obj.callee.name === 'require' && obj.arguments[0].value === 'angular'
+    );
+}
+
 // matches with default regexp
 //   *.controller("MyCtrl", function($scope, $timeout) {});
 //   *.*.controller("MyCtrl", function($scope, $timeout) {});
@@ -441,6 +449,13 @@ function isLongDef(node) {
     return node.callee &&
         node.callee.object && node.callee.object.name === "angular" &&
         node.callee.property && node.callee.property.name === "module";
+}
+
+// Require Angular form: require('angular').module(*).controller("MyCtrl", function($scope, $timeout) {});
+function isRequireAngularDef(node) {
+    return node.callee && node.callee.object && node.callee.object.arguments &&
+      node.callee.object.arguments.length === 1 && node.callee.object.arguments[0].value === 'angular' &&
+      node.callee.property && node.callee.property.name === "module";
 }
 
 function last(arr) {

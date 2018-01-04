@@ -26,7 +26,8 @@ let suites = [
   require('./ngInject-arrow'),
   require('./issues'),
   require('./references'),
-  require('./es6.js')
+  require('./es6.js'),
+  require('./require-angular.js')
 ];
 
 function runSuite(suite){
